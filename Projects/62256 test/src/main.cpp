@@ -12,6 +12,7 @@ const char ADDRESS_RST = 3;
 const char ADDRESS_INC = 2;
 const char PASS_LED = 8;
 const char FAIL_LED = 7;
+const unsigned int MEMORY_SIZE = 32768;
 unsigned int address;
 bool fail = false;
 
@@ -72,19 +73,6 @@ void printBinary(byte data)
   }
 }
 
-void writeData {
-  for (int i = 0; i < 8; i++)
-      {
-        if (bitRead(pattern, i))
-        {
-          digitalWrite(DATA_BUS[i], HIGH);
-        }
-        else
-        {
-          digitalWrite(DATA_BUS[i], LOW);
-        }
-}
-
 void setup()
 {
   pinMode(NOT_WE, OUTPUT);
@@ -106,18 +94,27 @@ void loop()
   digitalWrite (PASS_LED, HIGH); // both LEDS on for test in progress.
   digitalWrite (FAIL_LED,HIGH);
   // Write pattern to all locations
-  for (byte pattern = 0; pattern < 256; pattern++)
+  for (byte pattern = 0; pattern < 255; pattern++)
   {
     Serial.print("Running test pattern ");
     printBinary(pattern);
     Serial.println();
 
-    for (address = 0; address < 32768; address++)
+    for (address = 0; address < MEMORY_SIZE+1; address++)
     {
       setDataPinsOut(); // set data bus to output (on arduino)
       digitalWrite(NOT_OE, HIGH); // disable output
       digitalWrite(NOT_WE, LOW);  // Enable write
-      writeData ();
+       for (int i = 0; i < 8; i++)
+      {
+        if (bitRead(pattern, i))
+        {
+          digitalWrite(DATA_BUS[i], HIGH);
+        }
+        else
+        {
+          digitalWrite(DATA_BUS[i], LOW);
+        }
       }
       delayMicroseconds(1);
       digitalWrite(NOT_WE, HIGH); // disable write
@@ -144,14 +141,19 @@ void loop()
       }
        incrementAddress();
     }
-   
   }
-  Serial.print("All tests complete");
-  Serial.println("Hit reset to re-run");
+  
+  Serial.println("All tests complete");
+  
   if (!fail)
   {
+    Serial.println("PASS");
     digitalWrite(PASS_LED, HIGH);
     digitalWrite(FAIL_LED,LOW);
   }
+  else {
+    Serial.println("FAIL");
+  }
+  Serial.println("Hit reset to re-run");
   while (1);
 }
