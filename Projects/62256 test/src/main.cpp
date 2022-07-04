@@ -63,7 +63,7 @@ byte readData()
   return result;
 }
 
-// Output binary value from the 8 bit data
+// Print binary value from the 8 bit data
 void printBinary(byte data)
 {
   for (int b = 7; b >= 0; b--)
@@ -72,9 +72,21 @@ void printBinary(byte data)
   }
 }
 
+void writeData {
+  for (int i = 0; i < 8; i++)
+      {
+        if (bitRead(pattern, i))
+        {
+          digitalWrite(DATA_BUS[i], HIGH);
+        }
+        else
+        {
+          digitalWrite(DATA_BUS[i], LOW);
+        }
+}
+
 void setup()
 {
-
   pinMode(NOT_WE, OUTPUT);
   pinMode(NOT_OE, OUTPUT);
   pinMode(NOT_CS, OUTPUT);
@@ -91,6 +103,8 @@ void loop()
 {
   digitalWrite(NOT_CS, LOW);
   resetAddress();
+  digitalWrite (PASS_LED, HIGH); // both LEDS on for test in progress.
+  digitalWrite (FAIL_LED,HIGH);
   // Write pattern to all locations
   for (byte pattern = 0; pattern < 256; pattern++)
   {
@@ -100,23 +114,14 @@ void loop()
 
     for (address = 0; address < 32768; address++)
     {
-      setDataPinsOut();
+      setDataPinsOut(); // set data bus to output (on arduino)
       digitalWrite(NOT_OE, HIGH); // disable output
       digitalWrite(NOT_WE, LOW);  // Enable write
-      for (int i = 0; i < 8; i++)
-      {
-        if (bitRead(pattern, i))
-        {
-          digitalWrite(DATA_BUS[i], HIGH);
-        }
-        else
-        {
-          digitalWrite(DATA_BUS[i], LOW);
-        }
+      writeData ();
       }
       delayMicroseconds(1);
       digitalWrite(NOT_WE, HIGH); // disable write
-      setDataPinsIn();
+      setDataPinsIn(); // set data bus to receive (on arduino)
       digitalWrite(NOT_OE, LOW); // output enable
 
       // Read data back in
@@ -135,6 +140,7 @@ void loop()
         printBinary(pattern);
         Serial.println();
         digitalWrite(FAIL_LED, HIGH);
+        digitalWrite(PASS_LED,LOW);
       }
        incrementAddress();
     }
@@ -145,6 +151,7 @@ void loop()
   if (!fail)
   {
     digitalWrite(PASS_LED, HIGH);
+    digitalWrite(FAIL_LED,LOW);
   }
   while (1);
 }
